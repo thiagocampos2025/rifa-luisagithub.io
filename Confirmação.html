@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle de Pagamento - Rifaluiza</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        .btn-pagar {
+            padding: 5px 10px;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .pago {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Controle de Pagamentos da Rifa</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Número</th>
+            <th>Nome</th>
+            <th>Contato</th>
+            <th>Status</th>
+            <th>Ação</th>
+        </tr>
+    </thead>
+    <tbody id="rifa-tabela">
+        <!-- Conteúdo será gerado pelo JS -->
+    </tbody>
+</table>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhWfOThP5KvfD3zRYWBC6pe_I_5B814VQ",
+        authDomain: "thiagocampos2025-7421b.firebaseapp.com",
+        databaseURL: "https://thiagocampos2025-7421b-default-rtdb.firebaseio.com",
+        projectId: "thiagocampos2025-7421b",
+        storageBucket: "thiagocampos2025-7421b.appspot.com",
+        messagingSenderId: "495707238242",
+        appId: "1:495707238242:web:af16e438fd49d14005463b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const tabela = document.getElementById("rifa-tabela");
+
+    function carregarDados() {
+        get(ref(db, "rifa")).then(snapshot => {
+            tabela.innerHTML = "";
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for (let numero in data) {
+                    const { nome, contato, pago } = data[numero];
+                    const tr = document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${numero}</td>
+                        <td>${nome}</td>
+                        <td>${contato}</td>
+                        <td class="${pago ? 'pago' : ''}">${pago ? "Pago" : "Pendente"}</td>
+                        <td>
+                            ${!pago ? `<button class="btn-pagar" data-numero="${numero}">Marcar como pago</button>` : ""}
+                        </td>
+                    `;
+
+                    tabela.appendChild(tr);
+                }
+
+                document.querySelectorAll(".btn-pagar").forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const numero = this.getAttribute("data-numero");
+                        update(ref(db, "rifa/" + numero), { pago: true }).then(() => {
+                            alert("Pagamento confirmado!");
+                            carregarDados();
+                        });
+                    });
+                });
+            }
+        });
+    }
+
+    carregarDados();
+</script>
+
+</body>
+</html>
